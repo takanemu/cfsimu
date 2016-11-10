@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8">
 
-    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 
 <script>
 
-CF_PORTAL_SIZE = 20;
-CF_LINK_WIDTH = 3;
+CF_PORTAL_SIZE = 10;
+CF_LINK_WIDTH = 1;
 
 var Board = (function() {
     var is_cross_segment = function(ax, ay, bx, by, cx, cy, dx, dy) {
@@ -1320,7 +1320,7 @@ $(function() {
         <div class="col-md-5">
           <div class="row">
             <div class="col-md-12">
-              <canvas id="canvas" width="400" height="400"></canvas>
+              <canvas id="canvas" width="800" height="800"></canvas>
             </div>
             <div class="col-md-12" id="buttons">
               <a id="share" href="" target="_blank"><span class="glyphicon glyphicon-share"></span>共有URL</a>
