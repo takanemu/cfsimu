@@ -11,7 +11,13 @@
 
 CF_PORTAL_SIZE = 10;
 CF_LINK_WIDTH = 1;
+ENL_COLOR = 'rgba(0, 255, 0, 1.0)';
+RES_COLOR = 'rgba(0, 0, 255, 1.0)';
+SELECT_COLOR = 'rgba(255, 128, 128, 1.0)';
+ENL_CF_COLOR = 'rgba(0, 255, 0, 0.2)';
+RES_CF_COLOR = 'rgba(0, 0, 255, 0.2)';
 
+// 描画領域オブジェクト定義
 var Board = (function() {
     var is_cross_segment = function(ax, ay, bx, by, cx, cy, dx, dy) {
         var ta = (cx - dx) * (ay - cy) + (cy - dy) * (cx - ax);
@@ -92,11 +98,13 @@ var Board = (function() {
     function Board() {
         this.clear();
     }
+	// クリア処理
     Board.prototype.clear = function() {
         this.portals = {};
         this.links = [];
         this.cfs = [];
     };
+	// ポータルの設置処理
     Board.prototype.locate_portal = function(id, name, x, y, color) {
         this.portals[id] = {
             id: id,
@@ -124,6 +132,7 @@ var Board = (function() {
             }
         }
     };
+	// リンク処理
     Board.prototype.link = function(from, to) {
         var v = this.linkable(from, to);
         if (!v) {
@@ -137,6 +146,7 @@ var Board = (function() {
             from: p1,
             to: p2,
         });
+
         // create control fields
         var from_p1 = get_link_portals_from(this, p1);
         var from_p2 = get_link_portals_from(this, p2);
@@ -168,6 +178,7 @@ var Board = (function() {
             });
         }
     };
+	// リンク可否のチェック
     Board.prototype.linkable = function(from, to) {
         var portal1 = this.portals[from];
         var portal2 = this.portals[to];
@@ -235,19 +246,20 @@ var Board = (function() {
         }
         return result;
     };
+	// ボード情報取得
     Board.prototype.get_info = function() {
         return {
             cf: this.cfs.length,
             link: this.links.length,
         };
     };
-
+	// ポータル描画
     Board.prototype.draw_portal = function(ctx, portal, selected) {
         var color;
         if (selected == portal.id) {
-            color = 'rgba(0, 255, 255, 1.0)';
+            color = SELECT_COLOR;
         } else {
-            color = portal.color == 'ENL' ? 'rgba(0, 255, 0, 1.0)' : 'rgba(0, 0, 255, 1.0)';
+            color = portal.color == 'ENL' ? ENL_COLOR : RES_COLOR;
         }
         ctx.beginPath();
         ctx.lineWidth = 3;
@@ -257,8 +269,9 @@ var Board = (function() {
         ctx.fill();
         ctx.stroke();
     };
+	// リンク(矢印)描画
     Board.prototype.draw_link = function(ctx, link, view_arrow) {
-        var color = link.from.color == 'ENL' ? 'rgba(0, 255, 0, 1.0)' : 'rgba(0, 0, 255, 1.0)';
+        var color = link.from.color == 'ENL' ? ENL_COLOR : RES_COLOR;
         ctx.lineWidth = CF_LINK_WIDTH;
         ctx.strokeStyle = color;
         ctx.beginPath();
@@ -278,13 +291,14 @@ var Board = (function() {
         var angle1 = angle + 15 * Math.PI / 180;
         var angle2 = angle - 15 * Math.PI / 180;
         ctx.beginPath();
-        ctx.moveTo(px + 20 * Math.cos(angle1), py + 20 * Math.sin(angle1));
+        ctx.moveTo(px + 12 * Math.cos(angle1), py + 12 * Math.sin(angle1));
         ctx.lineTo(px, py);
-        ctx.lineTo(px + 20 * Math.cos(angle2), py + 20 * Math.sin(angle2));
+        ctx.lineTo(px + 12 * Math.cos(angle2), py + 12 * Math.sin(angle2));
         ctx.stroke();
     };
+	// CFの描画
     Board.prototype.draw_control_field = function(ctx, cf) {
-        var color = cf.p1.color == 'ENL' ? 'rgba(0, 255, 0, 0.3)' : 'rgba(0, 0, 255, 0.3)';
+        var color = cf.p1.color == 'ENL' ? ENL_CF_COLOR : RES_CF_COLOR;
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -294,15 +308,19 @@ var Board = (function() {
         ctx.closePath();
         ctx.fill();
     };
+	// 描画
     Board.prototype.draw = function(ctx, selected, view_arrow) {
+		// 全フィールド描画
         for (var i = 0; i <  this.cfs.length; i++) {
             var cf = this.cfs[i];
             this.draw_control_field(ctx, cf);
         }
+		// 全リンク描画
         for (var i = 0; i <  this.links.length; i++) {
             var link = this.links[i];
             this.draw_link(ctx, link, view_arrow);
         }
+		// 全ポータル描画
         for (var id in this.portals) {
             var portal = this.portals[id];
             this.draw_portal(ctx, portal, selected);
@@ -312,6 +330,7 @@ var Board = (function() {
     return Board;
 })();
 
+// コマンドリストオブジェクト定義
 var CommandList = (function() {
     function CommandList() {
         this.clear();
@@ -530,6 +549,7 @@ var CommandList = (function() {
         var x = deserialize_int(str);
         return { result: decodeURIComponent(x.remain.slice(0, x.result)), remain: x.remain.slice(x.result) };
     };
+	// URLパラメーターの生成
     CommandList.prototype.to_string = function() {
         var str = '';
         str += serialize_int(this.portal_id);
@@ -558,6 +578,7 @@ var CommandList = (function() {
         }
         return str;
     };
+	// URLパラメーターの解析
     CommandList.prototype.from_string = function(str) {
         var remain = str;
 
@@ -638,6 +659,7 @@ Array.prototype.shuffle = function() {
     return this;
 }
 
+// プリセットオブジェクト定義
 var Preset = (function() {
     function Preset() {
     }
@@ -955,10 +977,12 @@ var Preset = (function() {
     return Preset;
 })();
 
+// メイン処理
 $(function() {
     var canvas = $('#canvas');
     var ctx = canvas[0].getContext('2d');
     var clear = function() {
+	　　　　ctx.globalAlpha = 1.0;
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width(), canvas.height());
     };
@@ -968,6 +992,18 @@ $(function() {
     var selected = null;
     var preset = new Preset();
 
+	$(window).on('load', function() {
+	    var container = $('#canvasContainer');
+		$("#canvas").attr("width", container["0"].offsetWidth);
+		clear();
+    update();
+    });
+	$(window).bind('resize', function() {
+	    var container = $('#canvasContainer');
+		$("#canvas").attr("width", container["0"].offsetWidth);
+		clear();
+    update();
+    });
     $(document).on('click', '#command-list > a', function(e) {
         e.preventDefault();
         var index = $(this).attr('data-index');
@@ -984,6 +1020,7 @@ $(function() {
         update_portal_info();
         update_command_operators();
     };
+	// 共有URL処理
     var update_share_link = function() {
         var str = command_list.to_string();
         var loc = window.location;
@@ -1089,24 +1126,25 @@ $(function() {
         update();
     });
 
+	// コマンドリスト更新処理
     var update_command_list = function() {
         var tmpl = (
             '<li class="list-group-item" data-id="$id$">' +
             '  <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
             '  <div class="form-group">' +
-            '   <label>ポータル名</label>' +
+            '   <label>Poatal name</label>' +
             '   <input type="text" class="form-control input-sm portal-name">' +
             '  </div>' +
             '  <div class="form-group">' +
-            '    <label>初期陣営</label>' +
+            '    <label>Faction</label>' +
             '    <label class="radio-inline">' +
-            '      <input type="radio" class="initial-group" name="group-$id$" value="ENL">ENL' +
+            '      <input type="radio" class="initial-group" name="group-$id$" value="ENL">Enlightened' +
             '    </label>' +
             '    <label class="radio-inline">' +
-            '      <input type="radio" class="initial-group" name="group-$id$" value="RES">RES' +
+            '      <input type="radio" class="initial-group" name="group-$id$" value="RES">Resistance' +
             '    </label>' +
             '  </div>' +
-            '  <p class="portal-info-$id$"><small>IN/OUTリンク:</small> <span class="in-link">5</span>(<span class="current-in-link">3</span>) / <span class="out-link">4</span>(<span class="current-out-link">1</span>)</p>' +
+            '  <p class="portal-info-$id$"><small>IN/OUT Link:</small> <span class="in-link">5</span>(<span class="current-in-link">3</span>) / <span class="out-link">4</span>(<span class="current-out-link">1</span>) PortalKey:<span class="current-in-link">3</span></p>' +
             '</li>' +
             '');
         var portals = command_list.get_portals();
@@ -1153,9 +1191,9 @@ $(function() {
             var command = commands[i];
             var text;
             if (command.type == 'capture_portal') {
-                text = 'ポータル ' + portalobj[command.id].name + ' をキャプチャー';
+                text = 'Portal ' + portalobj[command.id].name + ' capture';
             } else if (command.type == 'link') {
-                text = 'ポータル ' + portalobj[command.from].name + ' から ポータル ' + portalobj[command.to].name + ' へリンク';
+                text = 'Portal ' + portalobj[command.from].name + ' to Portal ' + portalobj[command.to].name + ' linked';
             }
 
             var elem = $('<a>').attr('href', '#').attr('data-index', i + 1).addClass('list-group-item').text(text);
@@ -1285,17 +1323,17 @@ $(function() {
 
 </style>
 
-    <title>Ingress Control Field Simulator</title>
+    <title>Ingress Operation Preliminary</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
   </head>
   <body>
     <nav class="navbar navbar-default">
       <div class="container-fluid">
         <div class="navbar-header">
-          <a class="navbar-brand" href="">Ingress Control Field Simulator</a>
+          <a class="navbar-brand" href="">Ingress Operation Preliminary</a>
         </div>
         <ul class="nav navbar-nav navbar-right">
-          <li><a href="https://github.com/takanemu/cfsimu" target="_blank">Source</a></li>
+          <li><a href="https://github.com/takanemu/cfsimu" target="_blank">Github</a></li>
         </ul>
       </div>
     </nav>
@@ -1319,19 +1357,19 @@ $(function() {
         </div>
         <div class="col-md-5">
           <div class="row">
-            <div class="col-md-12">
-              <canvas id="canvas" width="800" height="800"></canvas>
+            <div id="canvasContainer" class="col-md-12" style="padding:0">
+              <canvas id="canvas" height="600"></canvas>
             </div>
             <div class="col-md-12" id="buttons">
-              <a id="share" href="" target="_blank"><span class="glyphicon glyphicon-share"></span>共有URL</a>
-              <button id="clear" class="pull-right btn btn-default">クリア</button>
-              <button id="clear-without-portal" class="pull-right btn btn-default">ポータルを残してクリア</button>
-              <button id="flip" class="pull-right btn btn-default">反転</button>
+              <a id="share" href="" target="_blank"><span class="glyphicon glyphicon-share"></span>ShareURL</a>
+              <button id="clear" class="pull-right btn btn-default">All clear</button>
+              <button id="clear-without-portal" class="pull-right btn btn-default">Clear(leaving portal)</button>
+              <button id="flip" class="pull-right btn btn-default">Reversed</button>
             </div>
             <div class="col-md-12">
               <div class="checkbox pull-right">
                 <label>
-                  <input id="view-arrow" type="checkbox" checked />矢印の表示
+                  <input id="view-arrow" type="checkbox" checked />Arrow mark disp
                 </label>
               </div>
             </div>
@@ -1340,7 +1378,7 @@ $(function() {
         <div class="col-md-5">
           <div class="row">
             <div class="col-md-12">
-              <p id="portal-info" class="text-right">合計CF数: <span class="cf">10</span>(<span class="current-cf">5</span>), 合計リンク数: <span class="link">15</span>(<span class="current-link">10</span>)</p>
+              <p id="portal-info" class="text-right">CF Count: <span class="cf">10</span>(<span class="current-cf">5</span>), Link Count: <span class="link">15</span>(<span class="current-link">10</span>)</p>
             </div>
             <div class="col-md-12">
               <div class="form-inline">
@@ -1362,18 +1400,18 @@ $(function() {
             <div class="panel-heading">
               <a role="button" data-toggle="collapse" href="#preset-body" aria-expanded="true" aria-controls="preset-body">
                 <h3 class="panel-title">
-                  プリセット
+                  Sample control field
                 </h3>
               </a>
             </div>
             <div class="collapse" id="preset-body">
               <div class="panel-body">
-                <div><label>基本形:</label></div>
+                <div><label>基本形(Basic):</label></div>
                 <div class="btn-group-vertical" role="group">
-                  <button type="button" class="btn btn-default preset" data-name="basic1">外三角形型</button>
-                  <button type="button" class="btn btn-default preset" data-name="basic2">内部分割型</button>
+                  <button type="button" class="btn btn-default preset" data-name="basic1">外三角形型(Outer triangle)</button>
+                  <button type="button" class="btn btn-default preset" data-name="basic2">内部分割型(Inner triangle)</button>
                 </div>
-                <div><label>一方向に伸ばすタイプ:</label></div>
+                <div><label>一方向に伸ばすタイプ():</label></div>
                 <div class="btn-group-vertical" role="group">
                   <button type="button" class="btn btn-default preset" data-name="oneway1">発散型（Ａ型、タケノコ）</button>
                   <button type="button" class="btn btn-default preset" data-name="oneway2">収縮型（Ｉ型、キール）</button>
